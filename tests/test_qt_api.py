@@ -24,6 +24,10 @@ BAD_PATTERNS = [
     # itemAt on a QGraphicsScene/QGraphicsView — we use _node_at instead
     r'(scene|view|self)\.scene\(\)\.itemAt\(',
     r'self\.itemAt\(',
+    # QGraphicsItem in Qt 6 has setFlags/setFlag — not setItemFlags
+    r'\.setItemFlags\(',
+    # QGraphicsScene in Qt 6 has no itemChanged() virtual — the item uses itemChange()
+    r'def itemChanged\(self, item, change, value\)',
 ]
 
 def test_no_invalid_qt_api_usage():
