@@ -212,7 +212,6 @@ class MainWindow(QMainWindow):
         self.status_bar.addPermanentWidget(right_label)
         self.setStatusBar(self.status_bar)
 
-        self.setMenuBar(None)
         self.setGeometry(80, 60, 1520, 920)
 
     def _separator(self):
@@ -459,7 +458,7 @@ class MainWindow(QMainWindow):
         if usage == 0:
             answer = QMessageBox.question(self, 'Delete item',
                                           f'Delete item "{item.name}"?')
-            if answer != QMessageBox.Yes:
+            if answer != QMessageBox.StandardButton.Yes:
                 return
             self.db.delete_item(item_id)
             if self.selected == ('item', item_id):
@@ -471,8 +470,8 @@ class MainWindow(QMainWindow):
             self, 'Delete item',
             f'"{item.name}" is used in {usage} recipe(s).\n\n'
             'Delete the item AND remove its references (empty recipes will also be deleted)?',
-            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-        if answer != QMessageBox.Yes:
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
+        if answer != QMessageBox.StandardButton.Yes:
             return
         self.db.delete_item_with_recipes(self.project_id, item_id)
         if self.selected == ('item', item_id):
@@ -487,7 +486,7 @@ class MainWindow(QMainWindow):
         if usage == 0:
             answer = QMessageBox.question(self, 'Delete process',
                                           f'Delete processing method "{proc.name}"?')
-            if answer != QMessageBox.Yes:
+            if answer != QMessageBox.StandardButton.Yes:
                 return
             self.db.delete_process(process_id)
             if self.selected == ('process', process_id):
@@ -498,8 +497,8 @@ class MainWindow(QMainWindow):
             self, 'Delete process',
             f'"{proc.name}" is used in {usage} recipe(s).\n\n'
             'Delete this process and ALL {usage} recipe(s) using it?'.format(usage=usage),
-            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-        if answer != QMessageBox.Yes:
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
+        if answer != QMessageBox.StandardButton.Yes:
             return
         # delete dependent recipes first (cascades through recipe_inputs/outputs and graph layout)
         recipes = self.db.recipes_using_process(self.project_id, process_id)

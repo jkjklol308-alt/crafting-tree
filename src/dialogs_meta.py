@@ -137,7 +137,7 @@ class ProjectManagerDialog(QDialog):
             self, 'Confirm delete',
             f'Delete project "{current["name"]}" and all of its data?\n\n'
             f'({items_n} items · {recipes_n} recipes)\nThis cannot be undone.')
-        if answer != QMessageBox.Yes:
+        if answer != QMessageBox.StandardButton.Yes:
             return
         self.db.delete_project(pid)
         # images folder removal
@@ -294,7 +294,7 @@ class ImportExportDialog(QDialog):
             answer = QMessageBox.question(
                 self, 'Confirm replace',
                 f'Replace the project with the imported data?\n\nThis deletes {items_n} items, {procs_n} processes and {recipes_n} recipes.')
-            if answer != QMessageBox.Yes:
+            if answer != QMessageBox.StandardButton.Yes:
                 return
         try:
             report = import_project(self.db, self.project_id, path, mode=mode)
@@ -382,7 +382,7 @@ class SettingsDialog(QDialog):
             self, 'Clear project data',
             f'Delete ALL items, processes and recipes from project "{project["name"]}"?\n\n'
             f'This cannot be undone.\n\n({stats["items"]} items · {stats["recipes"]} recipes)')
-        if answer != QMessageBox.Yes:
+        if answer != QMessageBox.StandardButton.Yes:
             return
         with self.db.conn:
             self.db.conn.execute('DELETE FROM recipe_outputs WHERE recipe_id IN (SELECT id FROM recipes WHERE project_id=?)', (self.project_id,))

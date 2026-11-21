@@ -725,23 +725,21 @@ class GraphScene(QGraphicsScene):
                 self.node_moved.emit(kind, key[1], pos.x(), pos.y())
         # click detection
         moved = (event.scenePos() - self._press_pos).manhattanLength()
-        item = self.itemAt(event.scenePos(), Qt.ItemSendsScenePositionToParent)
-        node = self._node_for_item(item)
+        node = self._node_at(event.scenePos())
         if moved < 8 and node is not None:
             self.node_clicked.emit(node.key)
 
     def mouseDoubleClickEvent(self, event):
         super().mouseDoubleClickEvent(event)
-        item = self.itemAt(event.scenePos(), Qt.ItemSendsScenePositionToParent)
-        node = self._node_for_item(item)
+        node = self._node_at(event.scenePos())
         if node is not None:
             self.node_double_clicked.emit(node.key)
 
-    def _node_for_item(self, item):
-        while item is not None:
-            if isinstance(item, NodeView):
-                return item
-            item = item.parentItem()
+    def _node_at(self, pos):
+        """NodeView whose scene-space bounding rect contains pos (last drawn wins)."""
+        for view in self.node_views.values():
+            if view.boundingRect().translated(view.pos()).contains(pos):
+                return view
         return None
 
     def itemChanged(self, item, change, value):
@@ -793,7 +791,7 @@ class GraphView(QGraphicsView):
         self.setDragMode(QGraphicsView.ScrollHandDrag)
         self.setBackgroundBrush(QColor(PALETTE['background']))
         self.setResizeAnchor(QGraphicsView.AnchorViewCenter)
-        self.setRubberBandSelectionVisible(False)
+        # Drag mode ScrollHandDrag already disables rectangle rubber-band selection.
         self._scale = 1.0
 
     # -- navigation ------------------------------------------------------
@@ -854,8 +852,7 @@ class GraphView(QGraphicsView):
         from PySide6.QtWidgets import QMenu
         menu = QMenu(self)
         scene_pos = self.mapToScene(event.pos())
-        item = self.scene().itemAt(scene_pos, Qt.ItemSendsScenePositionToParent)
-        node = self.scene()._node_for_item(item) if item else None
+        node = self.scene()._node_at(scene_pos)
         if node is not None:
             key = node.key
             if key in self.scene().collapsed:

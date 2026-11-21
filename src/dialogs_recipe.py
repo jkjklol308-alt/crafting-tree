@@ -318,7 +318,7 @@ class RecipeDialog(QDialog):
         answer = QMessageBox.question(
             self, 'Delete recipe',
             'Delete this recipe?\n\nThis cannot be undone.')
-        if answer != QMessageBox.Yes:
+        if answer != QMessageBox.StandardButton.Yes:
             return
         self.db.delete_recipe(self.recipe.id)
         self.accept()
