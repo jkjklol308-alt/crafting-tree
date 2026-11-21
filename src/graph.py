@@ -111,7 +111,18 @@ class NodeView(QGraphicsObject):
 
         self._qty_badge = None
 
-        self.setItemFlags(QGraphicsObject.ItemIsMovable)
+        self.setFlags(QGraphicsObject.ItemIsMovable)
+
+    # -- item change (Qt 6 virtual) --------------------------------------
+    def itemChange(self, change, value):
+        # Qt 6: QGraphicsItem.itemChange(change, value) — not the scene's
+        # (non-existent) itemChanged. Refresh connected edges when the node moves.
+        result = super().itemChange(change, value)
+        if change == QGraphicsItem.ItemPositionHasChanged:
+            scene = self.scene()
+            if isinstance(scene, GraphScene):
+                scene.refresh_edges_for_key(self.key)
+        return result
 
     # -- icon -----------------------------------------------------------
     def _load_icon(self):
@@ -751,11 +762,9 @@ class GraphScene(QGraphicsScene):
                 return view
         return None
 
-    def itemChanged(self, item, change, value):
-        super().itemChanged(item, change, value)
-        if isinstance(item, NodeView) and change == QGraphicsItem.ItemPositionHasChanged:
-            for edge in self.edges_by_node.get(item.key, []):
-                self._refresh_edge(edge)
+    def refresh_edges_for_key(self, key):
+        for edge in self.edges_by_node.get(key, []):
+            self._refresh_edge(edge)
 
     def _refresh_edge(self, edge):
         src_node = self.node_views.get(edge.src_key)
