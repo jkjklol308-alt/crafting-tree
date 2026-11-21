@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QFont, QIcon
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QFormLayout, QLineEdit, QPushButton,
     QLabel, QTableWidget, QTableWidgetItem, QComboBox, QSpinBox, QDoubleSpinBox,
@@ -89,7 +89,7 @@ class CalculatorDialog(QDialog):
         self.calc_btn = QPushButton('Calculate')
         self.calc_btn.setObjectName('primaryBtn')
         self.calc_btn.setMinimumWidth(140)
-        self.calc_btn.setIcon(None)
+        self.calc_btn.setIcon(QIcon())   # explicitly blank icon (Qt6 rejects None)
         self.calc_btn.clicked.connect(self._calculate)
         action_row.addWidget(self.calc_btn)
         action_row.addStretch()

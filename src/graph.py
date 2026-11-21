@@ -18,7 +18,7 @@ from PySide6.QtWidgets import QGraphicsScene, QGraphicsObject, QGraphicsView, QG
 from .models import Item, ProcessMethod, Recipe
 from .theme import PALETTE
 from .layout import compute_positions
-from .util import format_qty
+from .util import format_qty, ITEM_MIME_TYPE, parse_mime_item_ids
 
 ITEM_RADIUS = 34
 PROCESS_W, PROCESS_H = 96, 60
@@ -386,9 +386,18 @@ class GraphScene(QGraphicsScene):
     # ---------------- model ----------------
     def set_model(self, items, processes, recipes, positions=None,
                   classification=None, target_items=None):
-        self.items = dict(items)
-        self.processes = dict(processes)
-        self.recipes = list(recipes)
+        # Accept either an id-keyed dict (used by the calculator) or an
+        # iterable of Item/ProcessMethod (the main window passes lists straight
+        # from the database).
+        if isinstance(items, dict):
+            self.items = dict(items)
+        else:
+            self.items = {o.id: o for o in (items or [])}
+        if isinstance(processes, dict):
+            self.processes = dict(processes)
+        else:
+            self.processes = {o.id: o for o in (processes or [])}
+        self.recipes = list(recipes or [])
         self.positions = dict(positions or {})
         self.classification = dict(classification or {})
         self.target_items = set(target_items or set())
@@ -783,6 +792,8 @@ class GraphView(QGraphicsView):
     min_scale = 0.1
     max_scale = 5.5
 
+    item_dropped = Signal(str, float, float)   # comma-separated item ids, x, y (scene coords)
+
     def __init__(self, scene=None, parent=None):
         super().__init__(scene, parent)
         self.setRenderHint(QPainter.Antialiasing)
@@ -793,6 +804,29 @@ class GraphView(QGraphicsView):
         self.setResizeAnchor(QGraphicsView.AnchorViewCenter)
         # Drag mode ScrollHandDrag already disables rectangle rubber-band selection.
         self._scale = 1.0
+        self.setAcceptDrops(True)
+
+    # -- drag & drop from the sidebar -----------------------------------
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasFormat(ITEM_MIME_TYPE):
+            event.acceptProposedAction()
+            return
+        super().dragEnterEvent(event)
+
+    def dropEvent(self, event):
+        mime = event.mimeData()
+        if not mime.hasFormat(ITEM_MIME_TYPE):
+            super().dropEvent(event)
+            return
+        raw = mime.data(ITEM_MIME_TYPE)
+        text = bytes(raw).decode('utf-8', 'ignore') if raw is not None else ''
+        ids = parse_mime_item_ids(text)
+        if not ids:
+            super().dropEvent(event)
+            return
+        scene_pos = self.mapToScene(event.pos())
+        event.acceptProposedAction()
+        self.item_dropped.emit(','.join(map(str, ids)), float(scene_pos.x()), float(scene_pos.y()))
 
     # -- navigation ------------------------------------------------------
     def wheelEvent(self, event):
@@ -800,7 +834,8 @@ class GraphView(QGraphicsView):
         if delta == 0:
             return super().wheelEvent(event)
         factor = 1.15 if delta > 0 else 1.0 / 1.15
-        self.zoom_at_cursor(factor, event.pos())
+        # Qt 6: QWheelEvent is not a QMouseEvent — it has position(), not pos().
+        self.zoom_at_cursor(factor, event.position().toPoint())
 
     def zoom_at_cursor(self, factor, pos):
         new_scale = max(self.min_scale, min(self.max_scale, self._scale * factor))

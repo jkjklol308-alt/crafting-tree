@@ -1,15 +1,19 @@
-"""Left sidebar: search, categories and the item database list."""
+"""Left sidebar: search, categories and the item database list.
+
+Items can be dragged from this list into the centre graph: the list emits
+custom MIME data carrying the item id(s) (see :data:`ITEM_MIME_TYPE`).
+"""
 from __future__ import annotations
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QMimeData
 from PySide6.QtGui import QPixmap, QIcon, QPainter, QColor, QPen
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QComboBox, QListWidget,
-    QListWidgetItem, QPushButton, QLabel, QSizePolicy,
+    QListWidgetItem, QLabel, QAbstractItemView,
 )
 
 from .theme import PALETTE
-from .models import Item
+from .util import ITEM_MIME_TYPE
 
 _STATUS_COLOR = {
     'raw': PALETTE['raw'],
@@ -30,11 +34,35 @@ def _dot_icon(color):
     return QIcon(pm)
 
 
+class ItemListWidget(QListWidget):
+    """Item list whose rows can be dragged out as the item-id MIME payload.
+
+    Uses the standard QAbstractItemView drag machinery (``mimeTypes`` /
+    ``mimeData``) so dragging produces our custom MIME type rather than a
+    text dump.
+    """
+
+    def mimeTypes(self):
+        return [ITEM_MIME_TYPE]
+
+    def mimeData(self, items):
+        mime = QMimeData()
+        ids = []
+        for it in items:
+            try:
+                v = it.data(Qt.UserRole)
+                if v is not None:
+                    ids.append(str(int(v)))
+            except (TypeError, ValueError):
+                continue
+        if ids:
+            mime.setData(ITEM_MIME_TYPE, ','.join(ids).encode('utf-8'))
+        return mime
+
+
 class SideBar(QWidget):
     item_selected = Signal(int)
     item_double_clicked = Signal(int)
-    new_item_requested = Signal()
-    new_recipe_requested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -65,22 +93,12 @@ class SideBar(QWidget):
         cat_row.addWidget(self.category_combo, 1)
         layout.addLayout(cat_row)
 
-        self.list = QListWidget()
-        self.list.setVisible(True)
+        self.list = ItemListWidget()
+        # Items can only be dragged out of this list (not reordered inside it).
+        self.list.setDragDropMode(QAbstractItemView.DragOnly)
         self.list.itemClicked.connect(self._item_clicked)
         self.list.itemDoubleClicked.connect(self._item_double_clicked)
         layout.addWidget(self.list, 1)
-
-        btn_row = QHBoxLayout()
-        new_item = QPushButton('+ Item')
-        new_item.setObjectName('primaryBtn')
-        new_item.clicked.connect(self.new_item_requested.emit)
-        new_recipe = QPushButton('+ Recipe')
-        new_recipe.setObjectName('ghostBtn')
-        new_recipe.clicked.connect(self.new_recipe_requested.emit)
-        btn_row.addWidget(new_item)
-        btn_row.addWidget(new_recipe)
-        layout.addLayout(btn_row)
 
         self._item_class = {}
 

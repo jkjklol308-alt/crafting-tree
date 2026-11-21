@@ -43,6 +43,45 @@ def test_no_invalid_qt_api_usage():
             problems.append(f'{graph_src.relative_to(ROOT)}:{lineno}: {line.strip()}')
     assert not problems, '\n'.join(problems)
 
+def test_wheel_event_uses_position():
+    """Qt 6 QWheelEvent is not a QMouseEvent: it has position(), not pos()."""
+    graph_src = ROOT / 'src' / 'graph.py'
+    text = graph_src.read_text(encoding='utf-8')
+    start = text.index('def wheelEvent')
+    end = text.index('\n    def ', start + 10)
+    body = text[start:end]
+    assert '.pos()' not in body, (
+        'QWheelEvent has no pos() in Qt 6 — use position() (see contextMenuEvent, which does use pos() on QContextMenuEvent)\n' + body)
+    assert '.position()' in body, 'wheelEvent should use event.position() in Qt 6'
+
+
+def test_set_model_accepts_lists_and_dicts():
+    """set_model must not blindly dict()() a list (the main window passes lists)."""
+    graph_src = ROOT / 'src' / 'graph.py'
+    text = graph_src.read_text(encoding='utf-8')
+    start = text.index('def set_model')
+    end = text.index('\n    def ', start + 10)
+    body = text[start:end]
+    # Unconditional dict(items) / dict(processes) on a plain list raises
+    # TypeError. set_model must only call dict() inside the isinstance(...)
+    # branch (deeper indent), with an id-keyed comprehension otherwise.
+    assert '\n        self.items = dict(items)' not in body
+    assert '\n        self.processes = dict(processes)' not in body
+    assert 'isinstance(items' in body and 'isinstance(processes' in body
+
+
+def test_sidebar_has_no_duplicate_create_buttons():
+    """+ Item/+ Recipe buttons duplicated the top bar; they are removed."""
+    sidebar_src = ROOT / 'src' / 'sidebar.py'
+    text = sidebar_src.read_text(encoding='utf-8')
+    assert '+ Item' not in text and '+ Recipe' not in text
+    assert 'new_item_requested' not in text
+    assert 'new_recipe_requested' not in text
+
+
 if __name__ == '__main__':
     test_no_invalid_qt_api_usage()
+    test_wheel_event_uses_position()
+    test_set_model_accepts_lists_and_dicts()
+    test_sidebar_has_no_duplicate_create_buttons()
     print('ALL QT API GUARD TESTS PASSED')

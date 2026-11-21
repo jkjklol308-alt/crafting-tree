@@ -7,6 +7,25 @@ import sys
 from pathlib import Path
 from datetime import datetime
 
+# MIME type used when dragging an item row from the sidebar into the graph.
+# The payload is a comma-separated list of item ids (plain text).
+ITEM_MIME_TYPE = 'application/x-crafting-tree-item'
+
+
+def parse_mime_item_ids(text):
+    """Parse a comma-separated item-id payload (from a drag source).
+
+    Tolerates whitespace and ignores anything that is not a plain integer.
+    """
+    ids = []
+    if not text:
+        return ids
+    for token in text.split(','):
+        token = token.strip()
+        if token.isdigit():
+            ids.append(int(token))
+    return ids
+
 
 def data_dir() -> Path:
     """Directory that holds the SQLite database and uploaded images."""

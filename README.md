@@ -11,7 +11,7 @@ It is **not** a website, does not rely on a browser, and works fully offline. Al
 - **Item database** — create / edit / rename / delete items, with categories, tags, descriptions and optional image icons (e.g. Minecraft item textures). Items are reusable everywhere.
 - **Processing methods** — custom processes (Crushing, Washing, Milling, …), created by hand — nothing is generated for you.
 - **Recipes** — multiple inputs with per-input quantities, multiple outputs with per-output quantities, adjustable output probabilities (100% = guaranteed, <100% = probabilistic) and byproducts.
-- **Interactive bubble-web graph** — every item and process as a draggable node, direction of production on every edge, probabilities and quantities on output edges, branch collapsing, zoom/pan, filters (direct / upstream / downstream / chain), auto-arranging, fit-to-view.
+- **Interactive bubble-web graph** — every item and process as a draggable node, direction of production on every edge, probabilities and quantities on output edges, branch collapsing, zoom/pan, filters (direct / upstream / downstream / chain), drag items in from the sidebar, rearrange nodes freely, auto-arranging, fit-to-view.
 - **Item inspection** — click any node to see *Produced by* and *Can produce* with every input, quantity, probability and process. Every chip is clickable to navigate; the breadcrumb bar keeps your exploration history.
 - **Search & filters** — search items by name / category / tag / description, browse by category.
 - **Production calculator** — select one or more targets (total quantities), choose recipes, choose a calculation mode:
@@ -70,6 +70,8 @@ Start with an empty database (exactly like the real factory):
 
 The graph updates automatically. Drag nodes around, right‑click a node to collapse or filter its branch, scroll to zoom, drag empty space to pan. Double‑click any node to edit it.
 
+You can also drop items straight into the graph: press and drag an item row from the **DATABASE** list on the left into the centre graph — it lands at the drop point (positions are saved). Dropping several selected items at once places them in a small cluster. Node positions persist between sessions.
+
 ### 2. Explore the network
 Click any item in the graph or in the left sidebar. The right panel shows:
 - **Produced by** — every recipe that makes it, with inputs, quantities and probabilities.
@@ -117,7 +119,7 @@ src/
   dialogs_items.py       # item / process dialogs
   dialogs_recipe.py      # recipe dialog
   dialogs_meta.py        # projects / import-export / settings
-  sidebar.py             # left sidebar (search, categories, item list)
+  sidebar.py             # left sidebar (search, categories, item list, drag-to-graph)
   info_panel.py          # right panel (breadcrumbs, item/process details)
   models.py              # data models
   theme.py               # dark theme
