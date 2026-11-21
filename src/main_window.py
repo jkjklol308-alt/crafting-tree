@@ -183,8 +183,8 @@ class MainWindow(QMainWindow):
         self.sidebar = SideBar()
         self.sidebar.item_selected.connect(lambda iid: self.select_node(('item', iid), center=True))
         self.sidebar.item_double_clicked.connect(self._edit_item_by_id)
-        self.sidebar.new_item_requested.connect(self._new_item)
-        self.sidebar.new_recipe_requested.connect(self._new_recipe)
+        # Items dragged in from the sidebar are placed in the graph.
+        self.graph_view.item_dropped.connect(self._on_item_dropped)
 
         self.info_panel = InfoPanel()
         self.info_panel.navigate_item.connect(lambda iid: self.select_node(('item', iid), center=True))
@@ -388,6 +388,21 @@ class MainWindow(QMainWindow):
     def _on_node_moved(self, kind, nid, x, y):
         # called while dragging (also from auto-arrange)
         self.db.set_position(self.project_id, kind, nid, x, y)
+
+    def _on_item_dropped(self, ids_text, x, y):
+        # Items dropped from the sidebar: persist positions (clustered so
+        # several dropped together don't stack) and rebuild the graph.
+        ids = util.parse_mime_item_ids(ids_text)
+        if not ids:
+            return
+        # Keep focus consistent with the newly selected item before rebuild.
+        self.selected = ('item', ids[-1])
+        self.graph_scene.focus_kind, self.graph_scene.focus_id = self.selected
+        for i, nid in enumerate(ids):
+            self.db.set_position(self.project_id, 'item', nid,
+                                 x + (i % 3) * 150, y + (i // 3) * 120)
+        self._reload_all()
+        self.select_node(('item', ids[-1]), center=False)
 
     def _set_filter(self, mode):
         self.graph_scene.filter_mode = mode
