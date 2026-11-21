@@ -106,7 +106,7 @@ class NodeView(QGraphicsObject):
 
         self._label = NodeLabel()
         self._label.setParentItem(self)
-        self._label.setText(short_label(label))
+        self._label.setPlainText(short_label(label))
         self._label.setPos(-LABEL_W / 2, ITEM_RADIUS + 8)
 
         self._qty_badge = None
@@ -138,7 +138,7 @@ class NodeView(QGraphicsObject):
                 self._qty_badge = QtyBadge()
                 self._qty_badge.setParentItem(self)
                 self._qty_badge.setPos(-75, ITEM_RADIUS + 27)
-            self._qty_badge.setText(self._qty)
+            self._qty_badge.setPlainText(self._qty)
         if self._qty_badge is not None and not self._qty:
             self._qty_badge.deleteLater()
             self._qty_badge = None
@@ -147,7 +147,7 @@ class NodeView(QGraphicsObject):
 
     def set_labels(self, label, qty_text=None):
         self.label = label
-        self._label.setText(short_label(label))
+        self._label.setPlainText(short_label(label))
         if qty_text is not None:
             self.set_qty_text(qty_text)
         self.prepareGeometryChange()
@@ -286,7 +286,7 @@ class EdgeView(QGraphicsObject):
 
         self._label = NodeLabel()
         self._label.setParentItem(self)
-        self._label.setText(label)
+        self._label.setPlainText(label)
         self._label.setTextWidth(150)
         self._label.setFont(QFont('Segoe UI', 8, QFont.Bold))
         self._label.setDefaultTextColor(QColor('#c9d2df'))
@@ -306,7 +306,7 @@ class EdgeView(QGraphicsObject):
 
     def set_label(self, label):
         self.label_text = label
-        self._label.setText(label)
+        self._label.setPlainText(label)
 
     def paint(self, painter, option, widget=None):
         painter.setRenderHint(QPainter.Antialiasing)
@@ -668,7 +668,7 @@ class GraphScene(QGraphicsScene):
 
     def _add_empty_state(self):
         t = NodeLabel()
-        t.setText('The database is empty.\nCreate your first item, processing method\nand recipe to start building the factory.')
+        t.setPlainText('The database is empty.\nCreate your first item, processing method\nand recipe to start building the factory.')
         t.setFont(QFont('Segoe UI', 16, QFont.Normal))
         t.setTextWidth(520)
         t.setDefaultTextColor(QColor('#7c8594'))

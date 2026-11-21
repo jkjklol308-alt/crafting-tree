@@ -10,6 +10,8 @@ ROOT = Path(__file__).resolve().parent.parent
 SOURCES = list((ROOT / 'src').glob('*.py')) + [ROOT / 'app.py']
 
 BAD_PATTERNS = [
+    # QGraphicsTextItem in Qt 6 has setPlainText, not setText (in graph.py,
+    # every setText user is a QGraphicsTextItem-derived item)
     # Qt 6 has no setRubberBandSelectionVisible on QGraphicsView
     r'setRubberBandSelectionVisible',
     # Qt 6 itemAt does not accept an ItemSendsScenePositionToParent hint
@@ -32,6 +34,13 @@ def test_no_invalid_qt_api_usage():
             for lineno, line in enumerate(text.splitlines(), 1):
                 if re.search(pat, line):
                     problems.append(f'{src.relative_to(ROOT)}:{lineno}: {line.strip()}')
+    # QGraphicsTextItem has no setText() in Qt 6 — in graph.py, every
+    # .setText( call belongs to a QGraphicsTextItem-derived item and must be
+    # setPlainText().
+    graph_src = ROOT / 'src' / 'graph.py'
+    for lineno, line in enumerate(graph_src.read_text(encoding='utf-8').splitlines(), 1):
+        if re.search(r'\.setText\(', line):
+            problems.append(f'{graph_src.relative_to(ROOT)}:{lineno}: {line.strip()}')
     assert not problems, '\n'.join(problems)
 
 if __name__ == '__main__':
