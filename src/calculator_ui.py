@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
     QLabel, QTableWidget, QTableWidgetItem, QComboBox, QSpinBox, QDoubleSpinBox,
     QTabWidget, QTextEdit, QWidget, QFrame, QMessageBox, QGroupBox, QTreeWidget,
     QTreeWidgetItem, QRadioButton, QCheckBox, QScrollArea, QGridLayout, QSizePolicy,
-    QHeaderView,
+    QHeaderView, QGraphicsView,
 )
 
 from . import calculator as calc_mod
@@ -531,7 +531,7 @@ class CalculatorDialog(QDialog):
         layout.setContentsMargins(0, 0, 0, 0)
         scene = CalcScene()
         view = GraphView(scene)
-        view.setDragMode(view.ScrollHandDrag)
+        view.setDragMode(QGraphicsView.ScrollHandDrag)
         layout.addWidget(view)
         return tab, scene, view
 
