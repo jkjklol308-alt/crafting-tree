@@ -43,12 +43,15 @@ class MainWindow(QMainWindow):
     # ============================================================ UI
     def _build_ui(self):
         # ---------- top bar ----------
-        topbar = QWidget()
-        topbar.setObjectName('topbar')
-        topbar.setStyleSheet('''
+        # Owned by the central layout added at the bottom of _build_ui
+        # (a local QWidget would be destroyed as soon as this method returns,
+        #  taking every button with it).
+        self.topbar = QWidget()
+        self.topbar.setObjectName('topbar')
+        self.topbar.setStyleSheet('''
             QWidget {{ background: #1d2128; border-bottom: 1px solid #2b313c; }}
         ''')
-        top_layout = QHBoxLayout(topbar)
+        top_layout = QHBoxLayout(self.topbar)
         top_layout.setContentsMargins(14, 9, 14, 9)
         top_layout.setSpacing(10)
 
@@ -203,8 +206,19 @@ class MainWindow(QMainWindow):
         splitter.setCollapsible(0, True)
         splitter.setCollapsible(2, True)
 
+        # ---------- central widget ----------
+        # A plain topbar followed by a splitter need a container in between;
+        # the topbar is otherwise parentless and destroyed on return.
+        central = QWidget()
+        central_layout = QVBoxLayout(central)
+        central_layout.setContentsMargins(0, 0, 0, 0)
+        central_layout.setSpacing(0)
+        central_layout.addWidget(self.topbar)
+        central_layout.addWidget(splitter, 1)
+        self.central_widget = central
+        self.setCentralWidget(central)
+
         # ---------- status bar ----------
-        self.setCentralWidget(splitter)
         self.status_bar = QStatusBar()
         self.status_label = QLabel('')
         self.status_bar.addWidget(self.status_label)
